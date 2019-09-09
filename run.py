@@ -1,4 +1,4 @@
-from flask import Flask
+from flask import Flask, jsonify
 from flask_basicauth import BasicAuth
 import gspread
 from oauth2client.service_account import ServiceAccountCredentials
@@ -6,7 +6,7 @@ from oauth2client.service_account import ServiceAccountCredentials
 def update_database():
     SCOPES = ['https://www.googleapis.com/auth/spreadsheets']
     spreadsheet_key = app.config['PPT_CONTENT_GKEY']
-    path_to_google_cred = '../host/google_auth.json'
+    path_to_google_cred = 'host/google_auth.json'
 
     ## Connect to Google Sheets
     creds = ServiceAccountCredentials.from_json_keyfile_name(path_to_google_cred, SCOPES)
@@ -31,16 +31,13 @@ def update_database():
             new_party[basic_structure[counter]] = item
             counter += 1
 
-        parties[row[0]] = new_party
-
-    print(parties)
-
+        parties.append(new_party)
 
 app = Flask(__name__)
 
-app.config.from_pyfile('../host/conf.cfg')
+app.config.from_pyfile('host/conf.cfg')
 
-parties = {}
+parties = []
 update_database()
 
 basic_auth = BasicAuth(app)
@@ -48,6 +45,10 @@ basic_auth = BasicAuth(app)
 @app.route("/hello")
 def hello():
     return "Hello World!"
+
+@app.route("/v1/parties", methods = ['GET'])
+def get_parties():
+    return jsonify(parties)
 
 @app.route("/update")
 @basic_auth.required
