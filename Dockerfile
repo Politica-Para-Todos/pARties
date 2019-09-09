@@ -39,10 +39,8 @@ COPY server_conf/supervisor.ini /etc/supervisor.d/supervisor.ini
 
 RUN mkdir host
 RUN mkdir engine
-RUN mkdir data
 
 COPY run.py .
-COPY data/ data/
 
 ##########################################
 ## Entrypoint for the container
