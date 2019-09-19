@@ -2,3 +2,5 @@ Flask==0.12.2
 Flask-BasicAuth
 gspread
 oauth2client
+mistune
+beautifulsoup4

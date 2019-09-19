@@ -1,57 +1,21 @@
 from flask import Flask, jsonify
-from flask_basicauth import BasicAuth
-import gspread
-from oauth2client.service_account import ServiceAccountCredentials
 
-def update_database():
-    SCOPES = ['https://www.googleapis.com/auth/spreadsheets']
-    spreadsheet_key = app.config['PPT_CONTENT_GKEY']
-    path_to_google_cred = 'host/google_auth.json'
+from utils import update_database
 
-    ## Connect to Google Sheets
-    creds = ServiceAccountCredentials.from_json_keyfile_name(path_to_google_cred, SCOPES)
-    gs_con = gspread.authorize(creds)
-
-    sh = gs_con.open_by_key(spreadsheet_key)
-    worksheet = sh.worksheet("parties")
-    rows = worksheet.get_all_values()
-
-    basic_structure = []
-    is_first = True
-    for row in rows:
-        if is_first:
-             for item in row:
-                 basic_structure.append(item)
-             is_first = False
-             continue
-
-        counter = 0
-        new_party = {}
-        for item in row:
-            new_party[basic_structure[counter]] = item
-            counter += 1
-
-        parties.append(new_party)
+folder_md = '../pt-programas-legislativas-2019'
+folder_logos = '../pt-legislativas-2019-conteudo'
+manifestos, parties = update_database(folder_md, folder_logos)
 
 app = Flask(__name__)
 
-app.config.from_pyfile('host/conf.cfg')
-
-parties = []
-update_database()
-
-basic_auth = BasicAuth(app)
-
-@app.route("/hello")
+@app.route("/")
 def hello():
     return "Hello World!"
+
+@app.route("/v1/manifestos", methods = ['GET'])
+def get_manifestos():
+    return jsonify(manifestos)
 
 @app.route("/v1/parties", methods = ['GET'])
 def get_parties():
     return jsonify(parties)
-
-@app.route("/update")
-@basic_auth.required
-def update_internal_data():
-    update_database()
-    return "Database updated"
