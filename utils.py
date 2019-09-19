@@ -141,7 +141,7 @@ def build_cdu(path, parties):
     pcp = parties.pop('PCP')
     pev = parties.pop('PEV')
 
-    parties['CDU'] = {
+    parties['PCP-PEV'] = {
         'logo': f'{path}/cdu.png',
         'name': 'CDU - Coligação Democrática Unitária',
         'website': 'https://www.cdu.pt',
