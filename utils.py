@@ -87,10 +87,10 @@ def process_candidates(candidates, main_candidate_info, is_main):
             # add information regarding lead candidate
             if position == 1 and is_main:
                 # debug purposes
-                if not main_candidate_info:
-                    raise RuntimeError(f'No main candidate: {candidates}')
-                if name != main_candidate_info['name']:
-                    raise RuntimeError(f'Name mismatch: {candidates} - "{main_candidate_info["name"]}"')
+                #if not main_candidate_info:
+                #    raise RuntimeError(f'No main candidate: {candidates}')
+                #if name != main_candidate_info['name']:
+                #    raise RuntimeError(f'Name mismatch: {candidates} - "{main_candidate_info["name"]}"')
 
                 c.update({
                     'is_lead_candidate': True,
