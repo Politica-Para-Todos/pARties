@@ -94,9 +94,11 @@ def process_candidates(candidates, main_candidate_info, is_main):
 
                 c.update({
                     'is_lead_candidate': True,
-                    'description': main_candidate_info['description'],
-                    'description_source': main_candidate_info['description_source'],
-                    #'photo': main_candidate_info['photo'],
+                    'biography': main_candidate_info['biography'],
+                    'biography_source': main_candidate_info['biography_source'],
+                    'link_parlamento': main_candidate_info['link_parlamento'],
+                    'photo': main_candidate_info['photo'],
+                    'photo_source': main_candidate_info['photo_source'],
                 })
 
             all_candidates.append(c)
@@ -105,7 +107,7 @@ def process_candidates(candidates, main_candidate_info, is_main):
 
 
 def get_main_candidates_info(sheet):
-    worksheet = sheet.worksheet('Info sobre os candidatos')
+    worksheet = sheet.worksheet('Info sobre os cabeças de lista')
     rows = worksheet.get_all_values()
 
     all_main_candidates = {}
@@ -113,7 +115,7 @@ def get_main_candidates_info(sheet):
     def clean(x):
         return '' if x == '?' else x
 
-    for i in range(0, len(rows[0]), 6):
+    for i in range(0, len(rows[0]), 8):
         district = rows[0][i]
         for row in rows[2:]:
             if row[i]:
@@ -122,10 +124,11 @@ def get_main_candidates_info(sheet):
                     all_main_candidates[party] = {}
                 all_main_candidates[party][district] = {
                     'name': clean(row[i+1]),
-                    'description': clean(row[i+3]),
-                    'description_source': clean(row[i+5]),
-                    # TBD
-                    'photo': '', #row[i+4],
+                    'biography': clean(row[i+3]),
+                    'link_parlamento': clean(row[i+4]),
+                    'biography_source': clean(row[i+5]),
+                    'photo': row[i+6],
+                    'photo_source': row[i+7],
                 }
 
     return all_main_candidates
