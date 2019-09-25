@@ -3,8 +3,7 @@ from flask import Flask, jsonify
 from utils import update_database
 
 folder_md = '../pt-programas-legislativas-2019'
-folder_logos = '../pt-legislativas-2019-conteudo'
-manifestos, parties = update_database(folder_md, folder_logos)
+manifestos, parties = update_database(folder_md)
 
 app = Flask(__name__)
 

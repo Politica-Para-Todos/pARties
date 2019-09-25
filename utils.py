@@ -9,26 +9,26 @@ markdown = mistune.Markdown()
 party_to_manifesto = {
     'A': 'alianca_020919.md',
     'BE': 'be_120919.md',
-    'CDS-PP': '',
+    'CDS-PP': 'cdspp.md',
     'CH': 'CHEGA.md',
-    'IL': '',
+    'IL': 'Iniciativa Liberal.md',
     'JPP': '',
     'L': 'livre.md',
-    'MAS': '',
-    'NC': '',
+    'MAS': 'mas.md',
+    'NC': 'NOS_CIDADAOS_Set2019',
     'PCTP/MRPP': '',
-    'PCP': '',
+    'PCP': 'PCP.md',
     'MPT': '',
-    'PDR': '',
-    'PEV': '',
-    'PNR': '',
+    'PDR': 'PDR_22092019.md',
+    'PEV': 'pev_31082019.md',
+    'PNR': 'pnr.md',
     'PPM': '',
     'PPD/PSD': 'psd.md',
     'PS': 'PS_01092019.md',
     'PTP': '',
     'PURP': '',
     'PAN': 'pan_31082019.md',
-    'RIR': '',
+    'RIR': 'RIR',
 }
 
 
@@ -57,17 +57,45 @@ def md_to_json(path):
         section_content = all_tags[1:]
         return section_header, section_content
 
-    manifesto_header, intro_content = between(all_sections[0], all_sections[1])
+    # json with full manifesto
+    manifesto = {}
 
-    #
-    section_header, section_content = [text for text in between(all_sections[0], all_sections[1])][1:]
+    # get header and intro
+    manifesto_header, intro_content = get_tags(all_sections[0], all_sections[1])
+    manifesto['title'] = manifesto_header
+    manifesto['introduction'] = ''.join(intro_content)
 
-    ''.join(section)
+    # process sections
+    manifesto['sections'] = {}
+    for section_id in range(1, len(all_sections) - 1):
+        section_header, section_content = get_tags(all_sections[section_id], all_sections[section_id+1])
+
+        # find all h2 tags
+        subsections_indexes = [i for i, x in enumerate(section_content) if x.startswith('<h2>')]
+        if not subsections_indexes:
+            # there is no h2 tag, let's try h3 tags
+            subsections_indexes = [i for i, x in enumerate(section_content) if x.startswith('<h3>')]
+
+        manifesto['sections'][section_header] = {}
+        if subsections_indexes:
+            # can be empty
+            section_intro = ''.join(section_content[:subsections_indexes[0]])
+
+            # process subsections
+            subsections = {}
+            for subsection_id in range(len(subsections_indexes) - 1):
+                # TODO: maybe a subsection can have an introduction
+                header = section_content[subsections_indexes[subsection_id]]
+                content = section_content[subsections_indexes[subsection_id]+1:subsections_indexes[subsection_id+1]]
+                subsections[header] = content
+
+            manifesto['sections'][section_header]['introduction'] = section_intro
+            manifesto['sections'][section_header]['subsections'] = subsections
+        else:
+            manifesto['sections'][section_header]['content'] = ''.join(section_content)
 
 
-    parsed_html.body.find('div', attrs={'class':'container'}).text
-
-    return
+    return manifesto
 
 
 def process_candidates(candidates, main_candidate_info, is_main):
@@ -140,26 +168,29 @@ def get_acronym(acronym):
     return acronym
 
 
-def build_cdu(path, parties):
+def build_cdu(parties):
     pcp = parties.pop('PCP')
     pev = parties.pop('PEV')
 
     parties['PCP-PEV'] = {
-        'logo': f'{path}/cdu.png',
+        'logo': 'cdu.png',
         'name': 'CDU - Coligação Democrática Unitária',
         'website': 'https://www.cdu.pt',
         'email': '',
-        'description': f'{pcp["description"]}\n\n{pev["description"]}',
-        'description_source': f'{pcp["description_source"]}\n\n{pev["description_source"]}',
+        'description': f'PCP\n\n{pcp["description"]}\n\nPEV\n\n{pev["description"]}',
+        'description_source': f'{pcp["description_source"]}\n{pev["description_source"]}',
         'facebook': 'https://www.facebook.com/cdupcppev',
         'twitter': 'https://www.twitter.com/cdupcppev',
         'instagram': 'https://www.instagram.com/cdupcppev',
     }
 
+    # pcp and pev have same candidates in the spreadsheet
+    parties['PCP-PEV']['candidates'] = pcp['candidates']
+
     return parties
 
 
-def get_parties(path):
+def get_parties():
     scopes = ['https://spreadsheets.google.com/feeds',
               'https://www.googleapis.com/auth/drive']
     path_to_google_cred = 'google_auth.json'
@@ -183,7 +214,7 @@ def get_parties(path):
         if row[1]:
             acronym = row[3]
             parties[acronym] = {
-                'logo': f'{path}/{row[1]}',
+                'logo': row[1],
                 'name': row[2],
                 'website': row[4],
                 'email': row[5],
@@ -208,21 +239,20 @@ def get_parties(path):
             parties[acronym]['candidates'] = candidates
 
     # join PEV and PCP
-    parties = build_cdu(path, parties)
+    parties = build_cdu(parties)
 
     return parties
 
 
-def update_database(folder_md, folder_logos):
+def update_database(folder_md):
     print('Loading data..')
 
-    # TBD
     manifestos = {
-        #party: md_to_json(f'{folder_md}/{md_file}')
-        #for party, md_file in party_to_manifesto.items()
-        #if md_file
+        party: md_to_json(f'{folder_md}/{md_file}')
+        for party, md_file in party_to_manifesto.items()
+        if md_file
     }
 
-    parties = get_parties(folder_logos)
+    parties = get_parties()
 
     return manifestos, parties
