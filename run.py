@@ -18,3 +18,10 @@ def get_manifestos():
 @app.route("/v1/parties", methods = ['GET'])
 def get_parties():
     return jsonify(parties)
+
+@app.route("/v1/all", methods = ['GET'])
+def get_all():
+    return jsonify({
+        'parties': parties,
+        'manifestos': manifestos
+    })

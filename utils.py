@@ -16,7 +16,7 @@ party_to_manifesto = {
     'L': 'livre.md',
     'MAS': 'mas.md',
     'NC': 'NOS_CIDADAOS_Set2019',
-    'PCTP/MRPP': '',
+    'PCTP/MRPP': 'PCTP.md',
     'PCP': 'PCP.md',
     'MPT': '',
     'PDR': 'PDR_22092019.md',
@@ -47,7 +47,7 @@ def md_to_json(path):
     html = markdown(content)
 
     # html parser
-    parsed_html = BeautifulSoup(html)
+    parsed_html = BeautifulSoup(html,features="html.parser")
     # get all h1 tags, this should be manifesto and section headers
     all_sections = parsed_html.findAll('h1')
 
@@ -57,18 +57,8 @@ def md_to_json(path):
         section_content = all_tags[1:]
         return section_header, section_content
 
-    # json with full manifesto
-    manifesto = {}
-
-    # get header and intro
-    manifesto_header, intro_content = get_tags(all_sections[0], all_sections[1])
-    manifesto['title'] = manifesto_header
-    manifesto['introduction'] = ''.join(intro_content)
-
-    # process sections
-    manifesto['sections'] = {}
-    for section_id in range(1, len(all_sections) - 1):
-        section_header, section_content = get_tags(all_sections[section_id], all_sections[section_id+1])
+    def proccess_section(begin, end):
+        section_header, section_content = get_tags(begin, end)
 
         # find all h2 tags
         subsections_indexes = [i for i, x in enumerate(section_content) if x.startswith('<h2>')]
@@ -76,24 +66,106 @@ def md_to_json(path):
             # there is no h2 tag, let's try h3 tags
             subsections_indexes = [i for i, x in enumerate(section_content) if x.startswith('<h3>')]
 
-        manifesto['sections'][section_header] = {}
         if subsections_indexes:
+            subsections = []
+            position = 1
+
             # can be empty
-            section_intro = ''.join(section_content[:subsections_indexes[0]])
+            intro = section_content[:subsections_indexes[0]]
+            if not(len(intro) == 1 and intro[0].strip() == ""):
+                section_intro = subsections.append({
+                    'title': 'Introdução',
+                    'content': process_content(section_content[:subsections_indexes[0]]),
+                    'position': position,
+                })
+                position += 1
 
             # process subsections
-            subsections = {}
-            for subsection_id in range(len(subsections_indexes) - 1):
-                # TODO: maybe a subsection can have an introduction
-                header = section_content[subsections_indexes[subsection_id]]
-                content = section_content[subsections_indexes[subsection_id]+1:subsections_indexes[subsection_id+1]]
-                subsections[header] = content
+            if len(subsections_indexes) > 1:
+                for subsection_id in range(len(subsections_indexes) - 1):
+                    # TODO: maybe a subsection can have an introduction
+                    header = section_content[subsections_indexes[subsection_id]]
+                    content = section_content[subsections_indexes[subsection_id]+1:subsections_indexes[subsection_id+1]]
+                    subsections.append({
+                        'title': BeautifulSoup(header, features="html.parser").text,
+                        'content': process_content(content),
+                        'position': position,
+                    })
+                    position += 1
 
-            manifesto['sections'][section_header]['introduction'] = section_intro
-            manifesto['sections'][section_header]['subsections'] = subsections
+                # process last subsection
+                header = section_content[subsections_indexes[-1]]
+                content = section_content[subsections_indexes[-1]+1:]
+                subsections.append({
+                    'title': BeautifulSoup(header, features="html.parser").text,
+                    'content': process_content(content),
+                    'position': position,
+                })
+            else:
+                header = section_content[subsections_indexes[0]]
+                content = section_content[subsections_indexes[0]+1:]
+                subsections.append({
+                    'title': BeautifulSoup(header, features="html.parser").text,
+                    'content': process_content(content),
+                    'position': position,
+                })
+
+            return section_header, subsections
         else:
-            manifesto['sections'][section_header]['content'] = ''.join(section_content)
+            return section_header, process_content(section_content)
 
+    def process_content(content):
+        return [{
+            'position': i+1,
+            'html': x
+        } for i, x in enumerate(content)]
+
+    # json with full manifesto
+    manifesto = {}
+
+    manifesto['sections'] = []
+    if len(all_sections) > 1:
+        position = 1
+
+        # get header and intro
+        manifesto_header, intro_content = get_tags(all_sections[0], all_sections[1])
+        manifesto['title'] = BeautifulSoup(manifesto_header, features="html.parser").text
+
+        if not(len(intro_content) == 1 and intro_content[0].strip() == ""):
+            manifesto['sections'].append({
+                'title': 'Introdução',
+                'content': process_content(intro_content),
+                'position': position,
+            })
+            position += 1
+
+        # process sections
+        for section_id in range(1, len(all_sections) - 1):
+            section_header, content = proccess_section(all_sections[section_id], all_sections[section_id+1])
+            manifesto['sections'].append({
+                'title': BeautifulSoup(section_header, features="html.parser").text,
+                'content': content,
+                'position': position,
+            })
+            position += 1
+
+        # process last section
+        section_header, section_content = proccess_section(all_sections[-1], None)
+        manifesto['sections'].append({
+            'title': BeautifulSoup(section_header, features="html.parser").text,
+            'content': section_content,
+            'position': position,
+        })
+    else:
+        # get header and intro
+        manifesto_header, content = proccess_section(all_sections[0], None)
+        manifesto['title'] = BeautifulSoup(manifesto_header, features="html.parser").text
+
+        manifesto['sections'].append({
+            'title': 'Programa',
+            'content': content,
+            'position': 1,
+        })
 
     return manifesto
 
@@ -143,7 +215,7 @@ def get_main_candidates_info(sheet):
     def clean(x):
         return '' if x == '?' else x
 
-    for i in range(0, len(rows[0]), 8):
+    for i in range(0, len(rows[0]), 9):
         district = rows[0][i]
         for row in rows[2:]:
             if row[i]:
@@ -152,11 +224,11 @@ def get_main_candidates_info(sheet):
                     all_main_candidates[party] = {}
                 all_main_candidates[party][district] = {
                     'name': clean(row[i+1]),
-                    'biography': clean(row[i+3]),
-                    'link_parlamento': clean(row[i+4]),
-                    'biography_source': clean(row[i+5]),
-                    'photo': row[i+6],
-                    'photo_source': row[i+7],
+                    'biography': clean(row[i+4]),
+                    'link_parlamento': clean(row[i+5]),
+                    'biography_source': clean(row[i+6]),
+                    'photo': row[i+7],
+                    'photo_source': row[i+8],
                 }
 
     return all_main_candidates
@@ -255,4 +327,5 @@ def update_database(folder_md):
 
     parties = get_parties()
 
+    print('Done!')
     return manifestos, parties
