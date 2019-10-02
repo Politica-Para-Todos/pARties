@@ -15,10 +15,10 @@ party_to_manifesto = {
     'JPP': '',
     'L': 'livre.md',
     'MAS': 'mas.md',
-    'NC': 'NOS_CIDADAOS_Set2019',
+    'NC': 'NOS_CIDADAOS_Set2019.md',
     'PCTP/MRPP': 'PCTP.md',
     'PCP': 'PCP.md',
-    'MPT': '',
+    'MPT': 'mpt27092019.md',
     'PDR': 'PDR_22092019.md',
     'PEV': 'pev_31082019.md',
     'PNR': 'pnr.md',
@@ -26,9 +26,9 @@ party_to_manifesto = {
     'PPD/PSD': 'psd.md',
     'PS': 'PS_01092019.md',
     'PTP': '',
-    'PURP': '',
+    'PURP': 'PURP.md',
     'PAN': 'pan_31082019.md',
-    'RIR': 'RIR',
+    'RIR': 'RIR.md',
 }
 
 
@@ -245,7 +245,7 @@ def build_cdu(parties):
     pev = parties.pop('PEV')
 
     parties['PCP-PEV'] = {
-        'logo': 'cdu.png',
+        'logo': 'cdu.jpg',
         'name': 'CDU - Coligação Democrática Unitária',
         'website': 'https://www.cdu.pt',
         'email': '',
