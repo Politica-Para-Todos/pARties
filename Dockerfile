@@ -1,48 +1,13 @@
-FROM alpine:3.6
+FROM python:3.8-slim-buster
 
-WORKDIR /parties
+ENV FLASK_APP=run.py
 
-#########################################
-## Install Requirements
-#########################################
-RUN apk add --no-cache \
-        python3 \
-        python3-dev \
-        build-base \
-        uwsgi \
-        uwsgi-python3 \
-        nginx \
-        supervisor
+WORKDIR /app
 
+COPY requirements.txt /app/requirements.txt
 
-########################################
-## Install requirements
-########################################
+RUN pip3 install -r /app/requirements.txt
 
-COPY requirements.txt .
-RUN pip3 install -r requirements.txt
-RUN rm requirements.txt
+COPY . /app
 
-########################################
-## Configure host
-########################################
-
-RUN rm /etc/nginx/nginx.conf
-
-COPY server_conf/nginx.conf /etc/nginx/nginx.conf
-COPY server_conf/uwsgi.ini /parties/
-COPY server_conf/supervisor.ini /etc/supervisor.d/supervisor.ini
-
-########################################
-## Create the file structure and copy
-########################################
-
-RUN mkdir host
-RUN mkdir engine
-
-COPY run.py .
-
-##########################################
-## Entrypoint for the container
-##########################################
-CMD ["supervisord", "-n"]
+CMD [ "python3", "-m" , "flask", "run", "--host=0.0.0.0"]
