@@ -222,7 +222,7 @@ def get_main_candidates_info():
     all_main_candidates = {}
 
     def clean(url):
-        return '' if url == '-' else url
+        return '' if (url.strip() == '-') or (url.strip() == 'Partido') else url
 
     # rows 1-3 can be ignored
     # cols 1-2 can be ignored
@@ -237,7 +237,7 @@ def get_main_candidates_info():
             all_main_candidates[party][district] = {
                 'name': row[col],
                 'biography': row[col+1],
-                'biography_source': row[col+2],
+                'biography_source': clean(row[col+2]),
                 'link_parlamento': clean(row[col+3]),
                 'photo': row[col+4],
                 'photo_source': row[col+5]

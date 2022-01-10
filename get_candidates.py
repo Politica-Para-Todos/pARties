@@ -34,8 +34,8 @@ district_order = ['Aveiro','Beja','Braga','Bragança','Castelo Branco','Coimbra'
 party_order = ['PPD/PSD - CDS-PP - PPM – AD/Aliança Democrática','ALIANÇA','ADN','BE','CDS/PP','PCP - PEV - CDU','CHEGA','Ergue-te','IL','JPP','LIVRE','PPD/PSD-CDS-PP - MADEIRA PRIMEIRO','MAS','Nós, Cidadãos!','PCTP/MRPP','MPT','PPM','PPD/PSD','PS','PTP','PAN','R.I.R.','Volt Portugal']
 
 # load CSV data - extracted from CNE https://www.cne.pt/content/eleicoes-para-assembleia-da-republica-2022
-# public file: https://drive.google.com/file/d/1E12qbndro-TXovELAKnJm3ISCP6W1Llv/view?usp=sharing
-df = pd.read_csv("https://drive.google.com/uc?export=download&id=1E12qbndro-TXovELAKnJm3ISCP6W1Llv")
+# public file: https://drive.google.com/file/d/1B9dN6lnWEiEoIuQJf-K9tLFtS816-z2R/view?usp=sharing
+df = pd.read_csv("https://drive.google.com/uc?export=download&id=1B9dN6lnWEiEoIuQJf-K9tLFtS816-z2R")
 
 # fix data issues
 df["partido"] = df["partido"].str.strip()
