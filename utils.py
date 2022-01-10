@@ -1,34 +1,48 @@
 import mistune
-from bs4 import BeautifulSoup, NavigableString
 import gspread
+
+from bs4 import BeautifulSoup
 from oauth2client.service_account import ServiceAccountCredentials
 
 
-markdown = mistune.Markdown()
+# define the scope
+scope = ['https://www.googleapis.com/auth/spreadsheets','https://www.googleapis.com/auth/drive']
+
+# add credentials to the account
+creds = ServiceAccountCredentials.from_json_keyfile_name('google_auth.json', scope)
+
+# authorize the clientsheet 
+client = gspread.authorize(creds)
+
+# open the correct spreadsheet 
+# public file: https://docs.google.com/spreadsheets/d/1G1XZS1kA4LZSxNIM1Qjpb7FUTVIE0ZgZIOHwJDlmKWI/edit#gid=0
+sheet = client.open_by_key("1G1XZS1kA4LZSxNIM1Qjpb7FUTVIE0ZgZIOHwJDlmKWI")
+
 
 party_to_manifesto = {
-    'A': 'alianca_020919.md',
-    'BE': 'be_120919.md',
-    'CDS-PP': 'cdspp.md',
-    'CH': 'CHEGA.md',
-    'IL': 'Iniciativa Liberal.md',
+    'PPD/PSD.CDS-PP.PPM': '',
+    'A': '',
+    'ADN': 'ADN_31122021.md',
+    'BE': 'BE_31122021.md',
+    'CDS-PP': '',
+    'PCP-PEV': 'CDU_04012022.md',
+    'CH': 'CHEGA_29122021.md',
+    'E': '',
+    'IL': '',
     'JPP': '',
-    'L': 'livre.md',
-    'MAS': 'mas.md',
-    'NC': 'NOS_CIDADAOS_Set2019.md',
-    'PCTP/MRPP': 'PCTP.md',
-    'PCP': 'PCP.md',
-    'MPT': 'mpt27092019.md',
-    'PDR': 'PDR_22092019.md',
-    'PEV': 'pev_31082019.md',
-    'PNR': 'pnr.md',
+    'L': 'livre_30122021.md',
+    'PPD/PSD.CDS-PP': '',
+    'MAS': 'MAS_29122021.md',
+    'NC': '',
+    'PCTP/MRPP': '',
+    'MPT': '',
     'PPM': '',
-    'PPD/PSD': 'psd.md',
-    'PS': 'PS_01092019.md',
+    'PPD/PSD': '',
+    'PS': 'PS_20220107.md',
     'PTP': '',
-    'PURP': 'PURP.md',
-    'PAN': 'pan_31082019.md',
-    'RIR': 'RIR.md',
+    'PAN': '',
+    'RIR': 'RIR_20220105.md',
+    'VP': 'VP_20211229.md'
 }
 
 
@@ -44,7 +58,7 @@ def md_to_json(path):
     # read full markdown manifesto
     content = open(path, 'r').read()
     # convert markdown to html
-    html = markdown(content)
+    html = mistune.html(content)
 
     # html parser
     parsed_html = BeautifulSoup(html,features="html.parser")
@@ -59,13 +73,13 @@ def md_to_json(path):
 
     def proccess_section(begin, end):
         section_header, section_content = get_tags(begin, end)
-
+        
         # find all h2 tags
         subsections_indexes = [i for i, x in enumerate(section_content) if x.startswith('<h2>')]
         if not subsections_indexes:
             # there is no h2 tag, let's try h3 tags
             subsections_indexes = [i for i, x in enumerate(section_content) if x.startswith('<h3>')]
-
+        
         if subsections_indexes:
             subsections = []
             position = 1
@@ -73,13 +87,13 @@ def md_to_json(path):
             # can be empty
             intro = section_content[:subsections_indexes[0]]
             if not(len(intro) == 1 and intro[0].strip() == ""):
-                section_intro = subsections.append({
+                subsections.append({
                     'title': 'Introdução',
                     'content': process_content(section_content[:subsections_indexes[0]]),
                     'position': position,
                 })
                 position += 1
-
+            
             # process subsections
             if len(subsections_indexes) > 1:
                 for subsection_id in range(len(subsections_indexes) - 1):
@@ -92,7 +106,7 @@ def md_to_json(path):
                         'position': position,
                     })
                     position += 1
-
+                
                 # process last subsection
                 header = section_content[subsections_indexes[-1]]
                 content = section_content[subsections_indexes[-1]+1:]
@@ -172,11 +186,11 @@ def md_to_json(path):
 
 def process_candidates(candidates, main_candidate_info, is_main):
     all_candidates = []
-    for candidate in candidates.split('\n'):
+    for candidate in candidates.strip().split('\n'):
         if candidate:
-            s = candidate.split(' ')
-            position = int(s[0][:-1] if '.' in s[0] else s[0])
-            name = ' '.join(s[1:])
+            s = candidate.split('.')
+            position = int(s[0])
+            name = s[1].strip()
 
             c = {
                 'position': position,
@@ -184,14 +198,9 @@ def process_candidates(candidates, main_candidate_info, is_main):
                 'type': 'main' if is_main else 'secundary',
                 'is_lead_candidate': False
             }
+            
             # add information regarding lead candidate
             if position == 1 and is_main:
-                # debug purposes
-                #if not main_candidate_info:
-                #    raise RuntimeError(f'No main candidate: {candidates}')
-                #if name != main_candidate_info['name']:
-                #    raise RuntimeError(f'Name mismatch: {candidates} - "{main_candidate_info["name"]}"')
-
                 c.update({
                     'is_lead_candidate': True,
                     'biography': main_candidate_info['biography'],
@@ -206,117 +215,80 @@ def process_candidates(candidates, main_candidate_info, is_main):
     return all_candidates
 
 
-def get_main_candidates_info(sheet):
-    worksheet = sheet.worksheet('Info sobre os cabeças de lista')
+def get_main_candidates_info():
+    worksheet = sheet.worksheet('cabeca_de_lista')
     rows = worksheet.get_all_values()
 
     all_main_candidates = {}
 
-    def clean(x):
-        return '' if x == '?' else x
+    def clean(url):
+        return '' if url == '-' else url
 
-    for i in range(0, len(rows[0]), 9):
-        district = rows[0][i]
-        for row in rows[2:]:
-            if row[i]:
-                party = row[i]
-                if party not in all_main_candidates:
-                    all_main_candidates[party] = {}
-                all_main_candidates[party][district] = {
-                    'name': clean(row[i+1]),
-                    'biography': clean(row[i+4]),
-                    'link_parlamento': clean(row[i+5]),
-                    'biography_source': clean(row[i+6]),
-                    'photo': row[i+7],
-                    'photo_source': row[i+8],
-                }
+    # rows 1-3 can be ignored
+    # cols 1-2 can be ignored
+    for col in range(2, len(rows[0]), 6):
+        district = rows[1][col].strip()
+        for row in rows[3:26]:
+            party = row[1].strip()
+            
+            if party not in all_main_candidates:
+                all_main_candidates[party] = {}
+            
+            all_main_candidates[party][district] = {
+                'name': row[col],
+                'biography': row[col+1],
+                'biography_source': row[col+2],
+                'link_parlamento': clean(row[col+3]),
+                'photo': row[col+4],
+                'photo_source': row[col+5]
+            }
 
     return all_main_candidates
 
 
-def get_acronym(acronym):
-    if acronym == 'PCP' or acronym == 'PEV':
-        return 'PCP-PEV'
-    return acronym
-
-
-def build_cdu(parties):
-    pcp = parties.pop('PCP')
-    pev = parties.pop('PEV')
-
-    parties['PCP-PEV'] = {
-        'logo': 'cdu.jpg',
-        'name': 'CDU - Coligação Democrática Unitária',
-        'website': 'https://www.cdu.pt',
-        'email': '',
-        'description': f'PCP\n\n{pcp["description"]}\n\nPEV\n\n{pev["description"]}',
-        'description_source': f'{pcp["description_source"]}\n{pev["description_source"]}',
-        'facebook': 'https://www.facebook.com/cdupcppev',
-        'twitter': 'https://www.twitter.com/cdupcppev',
-        'instagram': 'https://www.instagram.com/cdupcppev',
-    }
-
-    # pcp and pev have same candidates in the spreadsheet
-    parties['PCP-PEV']['candidates'] = pcp['candidates']
-
-    return parties
-
-
 def get_parties():
-    scopes = ['https://spreadsheets.google.com/feeds',
-              'https://www.googleapis.com/auth/drive']
-    path_to_google_cred = 'google_auth.json'
-
-    ## Connect to Google Sheets
-    creds = ServiceAccountCredentials.from_json_keyfile_name(path_to_google_cred, scopes)
-    gs_con = gspread.authorize(creds)
-
-    sheet = gs_con.open('Spreadsheet - plataforma')
-    worksheet = sheet.worksheet('Lista de candidaturas')
+    # get main candidates info
+    main_candidates_info = get_main_candidates_info()
+    
+    # get all remaining candidate info
+    worksheet = sheet.worksheet("círculos_eleitorais")
     rows = worksheet.get_all_values()
 
-    main_candidates_info = get_main_candidates_info(sheet)
-
     parties = {}
-    headers = rows[1]
+    headers = rows[2]
 
-    # indexes 0-2 can be ignored
-    for row in rows[3:]:
-        # if defined is a party to load
-        if row[1]:
-            acronym = row[3]
-            parties[acronym] = {
-                'logo': row[1],
-                'name': row[2],
-                'website': row[4],
-                'email': row[5],
-                'description': row[6],
-                'description_source': row[7],
-                'facebook': row[8],
-                'twitter': row[9],
-                'instagram': row[10],
-            }
+    # rows 1-4 can be ignored
+    # cols 1 can be ignored
+    for row in rows[4:27]:
+        acronym = row[3].strip()
+        parties[acronym] = {
+            'logo': row[1],
+            'name': row[2],
+            'website': row[4],
+            'email': row[5],
+            'description': row[6],
+            'description_source': row[7],
+            'facebook': row[8],
+            'twitter': row[9],
+            'instagram': row[10]
+        }
 
-            # load candidates per district
-            candidates = {}
-            for i in range(13, len(row), 3):
-                district = headers[i]
-                # we are using get_acronym because main candidates have PCP and PEV together
-                main_candidate_info = main_candidates_info[get_acronym(acronym)].get(district, {})
+        # load candidates per district
+        candidates = {}
+        for col in range(12, len(row), 2):
+            district = headers[col].strip()
+            main_candidate_info = main_candidates_info[acronym].get(district, {})
 
-                candidates[district] = {}
-                candidates[district]['main'] = process_candidates(row[i], main_candidate_info, True)
-                candidates[district]['secundary'] = process_candidates(row[i+1], main_candidate_info, False)
+            candidates[district] = {}
+            candidates[district]['main'] = process_candidates(row[col], main_candidate_info, True)
+            candidates[district]['secundary'] = process_candidates(row[col+1], None, False)
 
-            parties[acronym]['candidates'] = candidates
-
-    # join PEV and PCP
-    parties = build_cdu(parties)
-
+        parties[acronym]['candidates'] = candidates
+    
     return parties
 
 
-def update_database(folder_md):
+def prepare_data(folder_md):
     print('Loading data..')
 
     manifestos = {

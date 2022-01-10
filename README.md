@@ -17,3 +17,21 @@ To execute the script run:
 ```bash
 make get_candidates
 ```
+
+# Get final json
+
+To build the json that is used to populate the database run:
+
+```bash
+# only once
+cd ..
+git clone git@github.com:Politica-Para-Todos/manifestos.git
+cp -r ../manifestos/legislativas/20220130_legislativas manifestos
+cd pARties
+```
+
+```bash
+make run
+```
+
+Open [localhost:5001/all](localhost:5001/all) and store the json in your pc. You also have the `/manifestos` and `parties`.

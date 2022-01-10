@@ -1,25 +1,23 @@
 from flask import Flask, jsonify
 
-from utils import update_database
+from utils import prepare_data
 
-folder_md = '../pt-programas-legislativas-2019'
-manifestos, parties = update_database(folder_md)
+folder_md = '/app/manifestos'
+manifestos, parties = prepare_data(folder_md)
+
 
 app = Flask(__name__)
 
-@app.route("/")
-def hello():
-    return "Hello World!"
 
-@app.route("/v1/manifestos", methods = ['GET'])
+@app.route("/manifestos", methods = ['GET'])
 def get_manifestos():
     return jsonify(manifestos)
 
-@app.route("/v1/parties", methods = ['GET'])
+@app.route("/parties", methods = ['GET'])
 def get_parties():
     return jsonify(parties)
 
-@app.route("/v1/all", methods = ['GET'])
+@app.route("/all", methods = ['GET'])
 def get_all():
     return jsonify({
         'parties': parties,
