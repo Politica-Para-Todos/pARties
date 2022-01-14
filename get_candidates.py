@@ -29,18 +29,22 @@ sheet = client.open_by_key("1G1XZS1kA4LZSxNIM1Qjpb7FUTVIE0ZgZIOHwJDlmKWI")
 worksheet = sheet.worksheet("círculos_eleitorais")
 
 # define order of parties and districts in the spreadsheet
-district_order = ['Aveiro','Beja','Braga','Bragança','Castelo Branco','Coimbra','Évora','Faro','Guarda','Leiria','Lisboa','Portalegre','Porto','Santarém','Setúbal','Viana do Castelo','Vila Real','Viseu','Açores','Madeira','Europa','Fora da europa']
+district_order = ['Aveiro','Beja','Braga','Bragança','Castelo Branco','Coimbra','Évora','Faro','Guarda','Leiria','Lisboa','Portalegre','Porto','Santarém','Setúbal','Viana do Castelo','Vila Real','Viseu','Açores','Madeira','Europa','Fora da Europa']
 
 party_order = ['PPD/PSD - CDS-PP - PPM – AD/Aliança Democrática','ALIANÇA','ADN','BE','CDS/PP','PCP - PEV - CDU','CHEGA','Ergue-te','IL','JPP','LIVRE','PPD/PSD-CDS-PP - MADEIRA PRIMEIRO','MAS','Nós, Cidadãos!','PCTP/MRPP','MPT','PPM','PPD/PSD','PS','PTP','PAN','R.I.R.','Volt Portugal']
 
 # load CSV data - extracted from CNE https://www.cne.pt/content/eleicoes-para-assembleia-da-republica-2022
-# public file: https://drive.google.com/file/d/1B9dN6lnWEiEoIuQJf-K9tLFtS816-z2R/view?usp=sharing
-df = pd.read_csv("https://drive.google.com/uc?export=download&id=1B9dN6lnWEiEoIuQJf-K9tLFtS816-z2R")
+# public file: https://drive.google.com/file/d/1U5KcgMvpPi83TiVMoULnfeqUjvSAmrdm/view?usp=sharing
+df = pd.read_csv("https://drive.google.com/uc?export=download&id=1U5KcgMvpPi83TiVMoULnfeqUjvSAmrdm")
 
 # fix data issues
 df["partido"] = df["partido"].str.strip()
 df["circulo"] = df["circulo"].str.strip()
-df["tipo"] = df["tipo"].str.replace("efectivo", "efetivo")
+df["tipo"] = df["tipo"].str.replace("efectivo", "efetivo", regex=False)
+df["partido"] = df["partido"].str.replace("Aliança", "ALIANÇA", regex=False)
+df["partido"] = df["partido"].str.replace("PCPT/MRPP", "PCTP/MRPP", regex=False)
+df["partido"] = df["partido"].str.replace("R.I.R.", "R.I.R", regex=False)
+df["partido"] = df["partido"].str.replace("R.I.R", "R.I.R.", regex=False)
 
 # nr candidates per district
 nr_candidates = {
@@ -65,12 +69,12 @@ nr_candidates = {
     'Açores': 5, 
     'Madeira': 6,
     'Europa': 2,
-    'Fora da europa': 2
+    'Fora da Europa': 2
 }
 
 # populate spreadsheet
 rows = range(5, 28)
-columns = range(13, 56, 2)
+columns = range(14, 57, 2)
 
 for col, district in tqdm(zip(columns, district_order), total=len(district_order)):
     for row, party in zip(rows, party_order):
@@ -78,8 +82,8 @@ for col, district in tqdm(zip(columns, district_order), total=len(district_order
         candidates = df[(df["partido"] == party) & (df["circulo"] == district)]
         
         if len(candidates) > 0:
-            main_candidates = candidates.loc[candidates["tipo"] == "efetivo", "candidato"]
-            secundary_candidates = candidates.loc[candidates["tipo"] == "suplente", "candidato"]
+            main_candidates = candidates.loc[candidates["tipo"] == "efetivo", "nome"]
+            secundary_candidates = candidates.loc[candidates["tipo"] == "suplente", "nome"]
 
             # https://www.cne.pt/faq2/96/3
             # assess criterias

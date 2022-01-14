@@ -24,20 +24,20 @@ party_to_manifesto = {
     'A': '',
     'ADN': 'ADN_31122021.md',
     'BE': 'BE_31122021.md',
-    'CDS-PP': '',
+    'CDS-PP': 'CDS_10012022.md',
     'PCP-PEV': 'CDU_04012022.md',
     'CH': 'CHEGA_29122021.md',
     'E': '',
-    'IL': '',
+    'IL': 'IL_20220109.md',
     'JPP': '',
     'L': 'livre_30122021.md',
     'PPD/PSD.CDS-PP': '',
     'MAS': 'MAS_29122021.md',
     'NC': '',
     'PCTP/MRPP': '',
-    'MPT': '',
+    'MPT': 'MPT_11012022.md',
     'PPM': '',
-    'PPD/PSD': '',
+    'PPD/PSD': 'PSD_09012022.md',
     'PS': 'PS_20220107.md',
     'PTP': '',
     'PAN': '',
@@ -270,12 +270,14 @@ def get_parties():
             'description_source': row[7],
             'facebook': row[8],
             'twitter': row[9],
-            'instagram': row[10]
+            'instagram': row[10],
+            'manifesto_source': row[11],
+            'manifesto_source_backup_ppt': row[12]
         }
 
         # load candidates per district
         candidates = {}
-        for col in range(12, len(row), 2):
+        for col in range(13, len(row), 2):
             district = headers[col].strip()
             main_candidate_info = main_candidates_info[acronym].get(district, {})
 
