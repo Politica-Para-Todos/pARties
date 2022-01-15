@@ -112,6 +112,8 @@ venv.bak/
 ehthumbs.db
 Thumbs.db
 
+.vscode
+
 ###################
 # Project files
 ###################

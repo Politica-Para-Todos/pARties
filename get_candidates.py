@@ -31,7 +31,7 @@ worksheet = sheet.worksheet("círculos_eleitorais")
 # define order of parties and districts in the spreadsheet
 district_order = ['Aveiro','Beja','Braga','Bragança','Castelo Branco','Coimbra','Évora','Faro','Guarda','Leiria','Lisboa','Portalegre','Porto','Santarém','Setúbal','Viana do Castelo','Vila Real','Viseu','Açores','Madeira','Europa','Fora da Europa']
 
-party_order = ['PPD/PSD - CDS-PP - PPM – AD/Aliança Democrática','ALIANÇA','ADN','BE','CDS/PP','PCP - PEV - CDU','CHEGA','Ergue-te','IL','JPP','LIVRE','PPD/PSD-CDS-PP - MADEIRA PRIMEIRO','MAS','Nós, Cidadãos!','PCTP/MRPP','MPT','PPM','PPD/PSD','PS','PTP','PAN','R.I.R.','Volt Portugal']
+party_order = ['PPD/PSD - CDS-PP - PPM – AD/ALIANÇA Democrática','ALIANÇA','ADN','BE','CDS/PP','PCP - PEV - CDU','CHEGA','Ergue-te','IL','JPP','LIVRE','PPD/PSD-CDS-PP - MADEIRA PRIMEIRO','MAS','Nós, Cidadãos!','PCTP/MRPP','MPT','PPM','PPD/PSD','PS','PTP','PAN','R.I.R.','Volt Portugal']
 
 # load CSV data - extracted from CNE https://www.cne.pt/content/eleicoes-para-assembleia-da-republica-2022
 # public file: https://drive.google.com/file/d/1U5KcgMvpPi83TiVMoULnfeqUjvSAmrdm/view?usp=sharing
