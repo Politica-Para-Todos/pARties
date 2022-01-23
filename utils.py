@@ -30,7 +30,7 @@ party_to_manifesto = {
     'E': 'Ergue-te_15012022.md',
     'IL': 'IL_20220117.md',
     'JPP': 'JPP_20012022.md',
-    'L': 'livre_30122021.md',
+    'L': 'LIVRE_30122021.md',
     'PPD/PSD.CDS-PP': '',
     'MAS': 'MAS_29122021.md',
     'NC': 'NC_19012022.md',
@@ -40,7 +40,7 @@ party_to_manifesto = {
     'PPD/PSD': 'PSD_09012022.md',
     'PS': 'PS_20220107.md',
     'PTP': '',
-    'PAN': 'pan_20220120.md',
+    'PAN': 'PAN_20220120.md',
     'RIR': 'RIR_20220105.md',
     'VP': 'VP_20211229.md'
 }

@@ -45,6 +45,7 @@ df["partido"] = df["partido"].str.replace("Aliança", "ALIANÇA", regex=False)
 df["partido"] = df["partido"].str.replace("PCPT/MRPP", "PCTP/MRPP", regex=False)
 df["partido"] = df["partido"].str.replace("R.I.R.", "R.I.R", regex=False)
 df["partido"] = df["partido"].str.replace("R.I.R", "R.I.R.", regex=False)
+df["partido"] = df["partido"].str.replace("PCP-PEV – CDU", "PCP - PEV - CDU", regex=False)
 
 # nr candidates per district
 nr_candidates = {
